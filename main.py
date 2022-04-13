@@ -13,7 +13,7 @@ from flask_restx import Api
 app = Flask(__name__)
 api = Api(app)
 
-client = MongoClient('mongodb://localhost', 27017)
+client = MongoClient('mongodb://172.31.3.16', 27017)
 db = client['kkot']
 
 def now():
@@ -138,4 +138,4 @@ def comment_delete(id):
     return Response('', status=200)
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host='0.0.0.0', debug=True)
