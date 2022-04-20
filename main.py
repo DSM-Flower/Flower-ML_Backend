@@ -13,7 +13,7 @@ from flask_restx import Api
 app = Flask(__name__)
 api = Api(app)
 
-client = MongoClient('mongodb://172.31.3.16', 27017)
+client = MongoClient('mongodb://kkot:kkot@172.31.3.16', 27017)
 db = client['kkot']
 
 def now():
