@@ -172,7 +172,7 @@ def comment_put():
     nickname = request.args.get('nickname')
     password = request.args.get('password')
     
-    obj = db['community'].find_one({'comment._id': ObjectId(id)}, {'comment.$': 1}})
+    obj = db['community'].find_one({'comment._id': ObjectId(id)}, {'comment.$': 1})
     
     if obj is None:
         return Response(status=404)
