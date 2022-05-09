@@ -15,7 +15,7 @@ from pprint import pprint
 app = Flask(__name__)
 api = Api(app)
 
-client = MongoClient('mongodb://kkot:kkot@172.31.9.101', 27017)
+client = MongoClient('mongodb://kkot:kkot@172.31.9.101:27017/kkot')
 # client = MongoClient('mongodb://localhost', 27017)
 db = client['kkot']
 
