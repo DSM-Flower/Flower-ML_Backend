@@ -89,9 +89,9 @@ def community_post():
 def community_put():
     args = dict(request.form)
 
-    id = args['_id']
-    nickname = args['nickname']
-    password = args['password']
+    id = args.pop('_id')
+    nickname = args.pop('nickname')
+    password = args.pop('password')
 
     obj = db['community'].find_one({'_id': ObjectId(id)})
 
