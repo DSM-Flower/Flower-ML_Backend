@@ -8,8 +8,6 @@ from pymongo import MongoClient
 from flask import Flask, request, Response
 from flask_restx import Api
 
-from pprint import pprint
-
 # 비밀번호는 fl0wer!!
 
 app = Flask(__name__)
@@ -22,8 +20,9 @@ db = client['kkot']
 def now():
     return datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
-@app.route('/image/<id>', methods=['GET'])
-def image(id):
+@app.route('/image', methods=['GET'])
+def image():
+    id = request.args.get('id')
     obj = db['images'].find_one({"_id": ObjectId(id)})
 
     content = obj['content']
@@ -35,12 +34,11 @@ def image(id):
 @app.route('/community_search', methods=['GET'])
 def community_search():
     keyword = request.args.get('keyword')
-    page = int(request.args.get('page'))
 
     objs = list(db['community'].find({"title": {"$regex": keyword}}))
     for obj in objs:
         obj['_id'] = str(obj['_id'])
-        obj['image'] = str(obj['image'][0])
+        obj['image'] = str(obj['image'][0]) if len(obj['image']) > 0 else None
         
         obj.pop('comment')
 
@@ -89,9 +87,11 @@ def community_post():
 
 @app.route('/community', methods=['PUT'])
 def community_put():
-    id = request.args.get('id')
-    nickname = request.args.get('nickname')
-    password = request.args.get('password')
+    args = dict(request.form)
+
+    id = args['_id']
+    nickname = args['nickname']
+    password = args['password']
 
     obj = db['community'].find_one({'_id': ObjectId(id)})
 
@@ -104,7 +104,6 @@ def community_put():
     for image in obj['image']:
         db['images'].delete_one({'_id': ObjectId(image)})
 
-    args = dict(request.form)
     files = []
     for i, file in enumerate(request.files.getlist('image')):
         byte_buffer = BytesIO()
@@ -144,7 +143,7 @@ def community_delete():
     db['community'].delete_one({"_id": ObjectId(id)})
     return Response('', status=200)
 
-@app.route('/comment_post', methods=['POST'])
+@app.route('/comment', methods=['POST'])
 def comment_post():
     args = dict(request.form)
 
@@ -166,7 +165,7 @@ def comment_post():
 
     return Response('', status=200)
     
-@app.route('/comment_put', methods=['PUT'])
+@app.route('/comment', methods=['PUT'])
 def comment_put():
     id = request.args.get('id')
     nickname = request.args.get('nickname')
@@ -191,8 +190,9 @@ def comment_put():
     
     return Response(status=200)
 
-@app.route('/comment_delete/<id>', methods=['DELETE'])
-def comment_delete(id):
+@app.route('/comment', methods=['DELETE'])
+def comment_delete():
+    id = request.args.get('id')
     nickname = request.args.get('nickname')
     password = request.args.get('password')
 
