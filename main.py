@@ -8,6 +8,8 @@ from pymongo import MongoClient
 from flask import Flask, request, Response
 from flask_restx import Api
 
+# https://www.tensorflow.org/hub/tutorials/image_feature_vector
+
 # 비밀번호는 fl0wer!!
 
 app = Flask(__name__)
@@ -42,21 +44,21 @@ def community_search():
         
         obj.pop('comment')
 
-    return Response(json.dumps(objs), status=200)
+    return Response(json.dumps(objs), status=200, content_type='text/json')
 
 @app.route('/community', methods=['GET'])
 def community_get():
     id = request.args.get('id')
     obj = db['community'].find_one({"_id": ObjectId(id)})
     if obj is None:
-        return Response('Not Found', status=404)
+        return Response('Not Found', status=404, content_type='text/json')
     
     obj['_id'] = str(obj['_id'])
     obj['image'] = [str(id) for id in obj['image']]
     for comment in obj['comment']:
         comment['_id'] = str(comment['_id'])
 
-    return Response(json.dumps(obj), status=200)
+    return Response(json.dumps(obj), status=200, content_type='text/json')
 
 @app.route('/community', methods=['POST'])
 def community_post():
@@ -81,9 +83,9 @@ def community_post():
         }
         db['community'].insert_one(post)
     except:
-        return Response(status=418)
+        return Response(status=418, content_type='text/json')
     else:
-        return Response(status=200)
+        return Response(status=200, content_type='text/json')
 
 @app.route('/community', methods=['PUT'])
 def community_put():
@@ -96,33 +98,36 @@ def community_put():
     obj = db['community'].find_one({'_id': ObjectId(id)})
 
     if obj is None:
-        return Response(status=404)
+        return Response(status=404, content_type='text/json')
 
     if obj['nickname'] != nickname or obj['password'] != password:
-        return Response(status=418)
+        return Response(status=418, content_type='text/json')
 
     for image in obj['image']:
         db['images'].delete_one({'_id': ObjectId(image)})
-
-    files = []
-    for i, file in enumerate(request.files.getlist('image')):
-        byte_buffer = BytesIO()
-        file.save(byte_buffer)
-
-        result = db['images'].insert_one({
-            'content': byte_buffer.getvalue(),
-            'ext': file.filename.split('.')[-1]
-        })
-        files.append(result.inserted_id)
-
+    
     post = {
         **args, 
-        'image': files,
         'uploadDate': now()
     }
+
+    if args.get('images', None) is None:
+        files = []
+        for i, file in enumerate(request.files.getlist('image')):
+            byte_buffer = BytesIO()
+            file.save(byte_buffer)
+
+            result = db['images'].insert_one({
+                'content': byte_buffer.getvalue(),
+                'ext': file.filename.split('.')[-1]
+            })
+            files.append(result.inserted_id)
+
+        post['images'] = files
+    
     db['community'].update_one({'_id': ObjectId(id)}, {'$set': post})
 
-    return Response(status=200)
+    return Response(status=200, content_type='text/json')
 
 @app.route('/community', methods=['DELETE'])
 def community_delete():
@@ -132,16 +137,16 @@ def community_delete():
 
     obj = db['community'].find_one({"_id": ObjectId(id)})
     if obj is None:
-        return Response('', status=404)
+        return Response('', status=404, content_type='text/json')
 
     if obj['nickname'] != nickname or obj['password'] != password:
-        return Response('', status=418)
+        return Response('', status=418, content_type='text/json')
 
     for image in obj['image']:
         db['images'].delete_one({'_id': ObjectId(image)})
 
     db['community'].delete_one({"_id": ObjectId(id)})
-    return Response('', status=200)
+    return Response('', status=200, content_type='text/json')
 
 @app.route('/comment', methods=['POST'])
 def comment_post():
@@ -150,7 +155,7 @@ def comment_post():
     id = args.pop('_id')
     obj = db['community'].find_one({'_id': ObjectId(id)})
     if obj is None:
-        return Response('', status=404)
+        return Response('', status=404, content_type='text/json')
 
     comment = {
         '_id': ObjectId(),
@@ -163,7 +168,7 @@ def comment_post():
         {'$push': {'comment': comment}}
     )
 
-    return Response('', status=200)
+    return Response('', status=200, content_type='text/json')
     
 @app.route('/comment', methods=['PUT'])
 def comment_put():
@@ -174,10 +179,10 @@ def comment_put():
     obj = db['community'].find_one({'comment._id': ObjectId(id)}, {'comment.$': 1})
     
     if obj is None:
-        return Response(status=404)
+        return Response(status=404, content_type='text/json')
        
     if obj['nickname'] != nickname or obj['password'] != password:
-        return Response(status=418)
+        return Response(status=418, content_type='text/json')
         
     comment = {
         **dict(request.form),
@@ -188,7 +193,7 @@ def comment_put():
         {'comment._id': ObjectId(id)}, {'$set': comment}
     )
     
-    return Response(status=200)
+    return Response(status=200, content_type='text/json')
 
 @app.route('/comment', methods=['DELETE'])
 def comment_delete():
@@ -198,14 +203,14 @@ def comment_delete():
 
     obj = db['community'].find_one({'comment._id': ObjectId(id)}, {'comment.$': 1})
     if obj is None:
-        return Response('', status=404)
+        return Response('', status=404, content_type='text/json')
 
     com = obj['comment'][0]
     if com['nickname'] != nickname or com['password'] != password:
-        return Response('', status=418)
+        return Response('', status=418, content_type='text/json')
 
     db['community'].update_one({}, {'$pull': {'comment': {'_id': ObjectId(id)}}})
-    return Response('', status=200)
+    return Response('', status=200, content_type='text/json')
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', debug=True)
