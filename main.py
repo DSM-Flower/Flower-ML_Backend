@@ -9,6 +9,7 @@ from flask import Flask, request, Response
 from flask_restx import Api
 
 # https://www.tensorflow.org/hub/tutorials/image_feature_vector
+# https://www.tensorflow.org/datasets/catalog/oxford_flowers102
 
 # 비밀번호는 fl0wer!!
 
@@ -21,6 +22,14 @@ db = client['kkot']
 
 def now():
     return datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+@app.route('/flower_search', methods=['GET'])
+def flower_search():
+    image = request.files.get('image')
+    buffer = BytesIO()
+    image.save(buffer)
+
+    return Response('{"name":"장미"}', status=200, content_type='text/json')
 
 @app.route('/image', methods=['GET'])
 def image():
@@ -113,7 +122,7 @@ def community_put():
 
     if args.get('images', None) is None:
         files = []
-        for i, file in enumerate(request.files.getlist('image')):
+        for file in request.files.getlist('image'):
             byte_buffer = BytesIO()
             file.save(byte_buffer)
 
@@ -172,9 +181,16 @@ def comment_post():
     
 @app.route('/comment', methods=['PUT'])
 def comment_put():
+    '''
     id = request.args.get('id')
     nickname = request.args.get('nickname')
     password = request.args.get('password')
+    '''
+    args = dict(request.form)
+
+    id = args.pop('_id')
+    nickname = args['nickname']
+    password = args['password']
     
     obj = db['community'].find_one({'comment._id': ObjectId(id)}, {'comment.$': 1})
     
