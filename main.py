@@ -16,8 +16,9 @@ from flask_restx import Api
 app = Flask(__name__)
 api = Api(app)
 
-client = MongoClient('mongodb://kkot:kkot@172.31.9.101:27017/kkot')
+# client = MongoClient('mongodb://kkot:kkot@172.31.9.101:27017/kkot')
 # client = MongoClient('mongodb://localhost', 27017)
+client = MongoClient('mongodb://kkot:kkot@54.153.89.152:27017/kkot')
 db = client['kkot']
 
 def now():
@@ -181,11 +182,6 @@ def comment_post():
     
 @app.route('/comment', methods=['PUT'])
 def comment_put():
-    '''
-    id = request.args.get('id')
-    nickname = request.args.get('nickname')
-    password = request.args.get('password')
-    '''
     args = dict(request.form)
 
     id = args.pop('_id')
@@ -193,6 +189,7 @@ def comment_put():
     password = args['password']
     
     obj = db['community'].find_one({'comment._id': ObjectId(id)}, {'comment.$': 1})
+    obj = obj['comment'][0]
     
     if obj is None:
         return Response(status=404, content_type='text/json')
