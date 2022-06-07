@@ -196,7 +196,8 @@ def comment_put():
        
     if obj['nickname'] != nickname or obj['password'] != password:
         return Response(status=418, content_type='text/json')
-        
+    
+    args['_id'] = ObjectId(id)
     comment = {
         **args,
         'uploadDate': now()
