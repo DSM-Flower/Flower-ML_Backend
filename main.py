@@ -198,7 +198,7 @@ def comment_put():
         return Response(status=418, content_type='text/json')
         
     comment = {
-        **dict(request.form),
+        **args,
         'uploadDate': now()
     }
     
