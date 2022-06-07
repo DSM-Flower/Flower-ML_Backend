@@ -203,7 +203,7 @@ def comment_put():
     }
     
     db['community'].update_one(
-        {'comment._id': ObjectId(id)}, {'$set': comment}
+        {'comment._id': ObjectId(id)}, {'$set': {'comment.$': comment}}
     )
     
     return Response(status=200, content_type='text/json')
