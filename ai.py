@@ -1,9 +1,6 @@
 import tensorflow as tf
 import numpy as np
 import cv2
-
-from PIL import Image
-
 print(tf.__version__)
 
 model = tf.saved_model.load('./saved_model/')
