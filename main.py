@@ -1,5 +1,7 @@
 import json
 import datetime
+import cv2
+import numpy as np
 
 from bson import ObjectId
 from io import BytesIO
@@ -7,6 +9,8 @@ from io import BytesIO
 from pymongo import MongoClient
 from flask import Flask, request, Response
 from flask_restx import Api
+
+from ai import classify_image
 
 # https://www.tensorflow.org/hub/tutorials/image_feature_vector
 # https://www.tensorflow.org/datasets/catalog/oxford_flowers102
@@ -16,9 +20,9 @@ from flask_restx import Api
 app = Flask(__name__)
 api = Api(app)
 
-# client = MongoClient('mongodb://kkot:kkot@172.31.9.101:27017/kkot')
+client = MongoClient('mongodb://kkot:kkot@172.31.9.101:27017/kkot')
 # client = MongoClient('mongodb://localhost', 27017)
-client = MongoClient('mongodb://kkot:kkot@54.153.89.152:27017/kkot')
+# client = MongoClient('mongodb://kkot:kkot@54.153.89.152:27017/kkot')
 db = client['kkot']
 
 def now():
@@ -26,11 +30,18 @@ def now():
 
 @app.route('/flower_search', methods=['GET'])
 def flower_search():
-    image = request.files.get('image')
     buffer = BytesIO()
+
+    image = request.files.get('image')
     image.save(buffer)
 
-    return Response('{"name":"장미"}', status=200, content_type='text/json')
+    image = cv2.imdecode(buffer)
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    image = image.reshape(1, 224, 224, 3).astype(np.float32) / 255
+
+    name, cls = classify_image(image)
+
+    return Response(f'{{"name":"{name}", "class":"{cls}"}}', status=200, content_type='text/json')
 
 @app.route('/image', methods=['GET'])
 def image():
@@ -197,8 +208,8 @@ def comment_put():
     if obj['nickname'] != nickname or obj['password'] != password:
         return Response(status=418, content_type='text/json')
     
-    args['_id'] = ObjectId(id)
     comment = {
+        '_id': ObjectId(id),
         **args,
         'uploadDate': now()
     }
