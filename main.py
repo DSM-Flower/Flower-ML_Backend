@@ -10,7 +10,7 @@ from pymongo import MongoClient
 from flask import Flask, request, Response
 from flask_restx import Api
 
-from ai import classify_image
+# from ai import classify_image
 
 # https://www.tensorflow.org/hub/tutorials/image_feature_vector
 # https://www.tensorflow.org/datasets/catalog/oxford_flowers102
@@ -27,7 +27,7 @@ db = client['kkot']
 
 def now():
     return datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-
+'''
 @app.route('/flower_search', methods=['GET'])
 def flower_search():
     buffer = BytesIO()
@@ -44,7 +44,7 @@ def flower_search():
     return Response(
         json.dumps({'name': name, 'cls': cls}), status=200, 
         content_type='text/json')
-
+'''
 @app.route('/image', methods=['GET'])
 def image():
     id = request.args.get('id')
