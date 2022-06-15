@@ -41,7 +41,9 @@ def flower_search():
 
     name, cls = classify_image(image)
 
-    return Response(f'{{"name":"{name}", "class":"{cls}"}}', status=200, content_type='text/json')
+    return Response(
+        json.dumps({'name': name, 'cls': cls}), status=200, 
+        content_type='text/json')
 
 @app.route('/image', methods=['GET'])
 def image():
